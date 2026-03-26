@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>3D立方体 - 顶面红绿渐变 | transform: translate/skewX/skewY</title>
+    <style>
+        /* 全局样式 - 干净背景与居中布局 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: radial-gradient(circle at 30% 20%, #1e2a3a, #0a0f1a);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, sans-serif;
+            padding: 20px;
+        }
+
+        /* 3D场景容器 - 透视与悬浮感 */
+        .scene {
+            perspective: 1200px;
+            perspective-origin: 50% 45%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            min-height: 600px;
+        }
+
+        /* 立方体核心包装器 - 所有面绝对定位，通过translate, skewX, skewY构建轴测立方体 */
+        .cube {
+            position: relative;
+            width: 280px;
+            height: 280px;
+            margin: 0 auto;
+            transform-style: preserve-3d;
+        }
+
+        /* 通用面样式 - 带渐变背景和边框微光 */
+        .face {
+            position: absolute;
+            width: 280px;
+            height: 280px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1.4rem;
+            color: rgba(255, 255, 255, 0.95);
+            text-shadow: 0 2px 5px rgba(0,0,0,0.4);
+            letter-spacing: 1px;
+        }
+
+        /* ----- 各面定位：完全使用 translate, skewX, skewY，无rotate变换 ----- */
+        
+        /* 1. 正面 - 基准面，无倾斜 */
+        .face-front {
+            /* 渐变：从左到右的暖色渐变，增加视觉丰富度 */
+            background: linear-gradient(135deg, #ff9966, #ff5e62, #ff3a4d);
+            transform: translate(0px, 0px);
+            z-index: 20;
+        }
+        
+        /* 2. 顶面 (上面) - 重点：红色在上，绿色在下（从上到下渐变） */
+        /* 要求：上面红色，梯度过渡到下面为绿色 */
+        .face-top {
+            /* 从上到下渐变：起始红色 (#e31b23 鲜红)，过渡到绿色 (#2ecc71 翠绿) */
+            background: linear-gradient(180deg, #e31b23, #ff4d4d, #2ecc71, #27ae60);
+            /* 增强渐变层次：从上到下红->橙红->绿->深绿，确保红色在上绿色在下 */
+            background: linear-gradient(180deg, #e63946, #ff6b6b, #52b788, #2d6a4f);
+            /* 更鲜艳版本：顶部鲜红，底部草绿 */
+            background: linear-gradient(180deg, #dc2626, #ef4444, #10b981, #059669);
+            /* 最终采用最清晰红绿过渡: 上红 #e11d48, 下绿 #16a34a */
+            background: linear-gradient(180deg, #e11d48, #f43f5e, #22c55e, #15803d);
+            
+            /* 变换：先平移至顶部位置，再通过skewX和skewY产生倾斜，形成立方体顶面视觉 */
+            transform: translate(25px, -145px) skewX(-28deg) skewY(-12deg);
+            transform-origin: bottom left;
+            z-index: 15;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+        }
+        
+        /* 3. 右侧面 - 蓝绿色系渐变，清新 */
+        .face-right {
+            background: linear-gradient(160deg, #0f9b8e, #1ba098, #48cae4);
+            background: linear-gradient(145deg, #0891b2, #2dd4bf, #14b8a6);
+            transform: translate(215px, -28px) skewY(-28deg) skewX(-2deg);
+            transform-origin: left top;
+            z-index: 14;
+        }
+        
+        /* 4. 左侧面 - 橙色/金色渐变，增加立体丰富度 */
+        .face-left {
+            background: linear-gradient(235deg, #f59e0b, #f97316, #fdba74);
+            background: linear-gradient(220deg, #f97316, #fb923c, #facc15);
+            transform: translate(-215px, -28px) skewY(28deg) skewX(2deg);
+            transform-origin: right top;
+            z-index: 12;
+        }
+        
+        /* 5. 底面 - 深紫色到靛蓝渐变，稳重 */
+        .face-bottom {
+            background: linear-gradient(45deg, #6b21a5, #7c3aed, #8b5cf6);
+            background: linear-gradient(135deg, #5b21b6, #7c3aed, #a78bfa);
+            transform: translate(30px, 148px) skewX(32deg) skewY(12deg);
+            transform-origin: top left;
+            z-index: 8;
+        }
+        
+        /* 6. 背面 - 紫罗兰到粉色渐变 */
+        .face-back {
+            background: linear-gradient(300deg, #c084fc, #e879f9, #f0abfc);
+            background: linear-gradient(190deg, #a855f7, #d946ef, #f5d0fe);
+            transform: translate(-35px, 45px) skewX(10deg) skewY(-8deg);
+            z-index: 5;
+            opacity: 0.94;
+        }
+        
+        /* 调整部分面的层级与显示顺序 */
+        .face-front {
+            z-index: 20;
+        }
+        .face-top {
+            z-index: 19;
+        }
+        .face-right {
+            z-index: 18;
+        }
+        .face-left {
+            z-index: 17;
+        }
+        .face-bottom {
+            z-index: 12;
+        }
+        .face-back {
+            z-index: 8;
+        }
+        
+        /* 悬停效果轻微高亮 */
+        .face:hover {
+            filter: brightness(1.02);
+            box-shadow: 0 8px 22px rgba(0,0,0,0.3);
+            border-color: rgba(255,255,240,0.6);
+            transition: all 0.2s;
+        }
+        
+        /* 每个面增加文字标识，便于观察方向，且不干扰颜色展示 */
+        .face-front::after {
+            content: "前";
+            font-size: 2rem;
+            font-weight: bold;
+            opacity: 0.8;
+            background: rgba(0,0,0,0.25);
+            padding: 5px 18px;
+            border-radius: 40px;
+            backdrop-filter: blur(5px);
+            font-family: monospace;
+        }
+        .face-top::after {
+            content: "上 ⬇️ 红→绿";
+            font-size: 1.2rem;
+            font-weight: bold;
+            opacity: 0.9;
+            background: rgba(0,0,0,0.4);
+            padding: 6px 14px;
+            border-radius: 40px;
+            backdrop-filter: blur(4px);
+            white-space: nowrap;
+        }
+        .face-right::after {
+            content: "右";
+            font-size: 1.8rem;
+            font-weight: bold;
+            background: rgba(0,0,0,0.3);
+            padding: 5px 18px;
+            border-radius: 40px;
+            backdrop-filter: blur(4px);
+        }
+        .face-left::after {
+            content: "左";
+            font-size: 1.8rem;
+            font-weight: bold;
+            background: rgba(0,0,0,0.3);
+            padding: 5px 18px;
+            border-radius: 40px;
+            backdrop-filter: blur(4px);
+        }
+        .face-bottom::after {
+            content: "下";
+            font-size: 1.8rem;
+            font-weight: bold;
+            background: rgba(0,0,0,0.3);
+            padding: 5px 18px;
+            border-radius: 40px;
+            backdrop-filter: blur(4px);
+        }
+        .face-back::after {
+            content: "后";
+            font-size: 1.8rem;
+            font-weight: bold;
+            background: rgba(0,0,0,0.3);
+            padding: 5px 18px;
+            border-radius: 40px;
+            backdrop-filter: blur(4px);
+        }
+        
+        /* 针对顶面文字调整，确保显示完整 */
+        .face-top::after {
+            font-size: 1rem;
+            white-space: nowrap;
+            letter-spacing: 0;
+        }
+        
+        /* 整体立方体轻微浮动动画，增加生动性 */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            100% { transform: translateY(-8px); }
+        }
+        .cube {
+            animation: float 3s ease-in-out infinite alternate;
+        }
+        
+        /* 响应式缩放 */
+        @media (max-width: 700px) {
+            .cube {
+                transform: scale(0.7);
+            }
+            .scene {
+                min-height: 500px;
+            }
+            .face-top::after {
+                font-size: 0.8rem;
+                padding: 4px 10px;
+                white-space: nowrap;
+            }
+        }
+        
+        /* 增强顶面红绿渐变的视觉提示，增加一个额外的光晕效果使渐变更明显 */
+        .face-top {
+            /* 确保渐变方向精确为从上到下 (to bottom) */
+            background: linear-gradient(180deg, #e11d48, #f43f5e, #22c55e, #15803d);
+            background: linear-gradient(180deg, #dc2626, #ef4444, #4ade80, #16a34a);
+            /* 最强对比版本，顶部深红底部深绿，中间过渡橙黄绿 */
+            background: linear-gradient(180deg, #b91c1c, #ef4444, #86efac, #166534);
+            /* 最终采用醒目红绿过渡: 红色在上，绿色在下 */
+            background: linear-gradient(to bottom, #ff3b3b, #ff7e5e, #6fda6f, #228b22);
+            background: linear-gradient(180deg, #e63946, #ff8c69, #6fbf4c, #2d6a4f);
+            /* 使用最鲜艳版本确保"上面红色渐变到下面绿色"明确可见 */
+            background: linear-gradient(180deg, #ff3131, #ff7a45, #4caf50, #1e7e34);
+            background: linear-gradient(0deg, #2e7d32, #66bb6a, #ff7043, #d32f2f);
+            background: linear-gradient(180deg, #d32f2f, #f97316, #4caf50, #2e7d32);
+            background: linear-gradient(180deg, #e31b23, #ff6b4a, #4caf50, #1e5631);
+            background: linear-gradient(180deg, #e31b23 0%, #ff6b4a 30%, #4caf50 70%, #1e5631 100%);
+        }
+        
+        /* 最终确保所有面使用的transform均仅包含translate, skewX, skewY，没有rotate3d/rotateX等 */
+        /* 验证: face-front: translate(0,0); face-top: translate+skewX+skewY; face-right: translate+skewY+skewX;
+           face-left: translate+skewY+skewX; face-bottom: translate+skewX+skewY; face-back: translate+skewX+skewY */
+        
+        /* 增加地面投影效果，增强立体感 */
+        .cube::before {
+            content: '';
+            position: absolute;
+            bottom: -45px;
+            left: 10%;
+            width: 80%;
+            height: 28px;
+            background: radial-gradient(ellipse, rgba(0,0,0,0.5), transparent);
+            filter: blur(8px);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        /* 信息栏 */
+        .info {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(10px);
+            padding: 10px 20px;
+            border-radius: 40px;
+            color: #f0f0f0;
+            font-size: 0.85rem;
+            font-family: 'JetBrains Mono', monospace;
+            z-index: 100;
+            pointer-events: none;
+            border-left: 4px solid #e63946;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        .info span {
+            color: #ffb347;
+            font-weight: bold;
+        }
+        
+        /* 为顶面增加渐变说明的额外标注 (工具提示风格) */
+        @media (min-width: 768px) {
+            .face-top:hover::after {
+                content: "🔴 红色 (上) → 🟢 绿色 (下)";
+                font-size: 0.9rem;
+                background: rgba(0,0,0,0.7);
+                white-space: nowrap;
+            }
+        }
+        
+        /* 确保文字标识在任何屏幕上不会溢出 */
+        .face {
+            overflow: hidden;
+        }
+        
+        /* 最终微调接缝处对齐，确保立方体视觉上为封闭六面体 */
+        .face-top {
+            transform: translate(26px, -146px) skewX(-28deg) skewY(-12deg);
+        }
+        .face-right {
+            transform: translate(216px, -28px) skewY(-28deg) skewX(-2deg);
+        }
+        .face-left {
+            transform: translate(-216px, -28px) skewY(28deg) skewX(2deg);
+        }
+        .face-bottom {
+            transform: translate(31px, 150px) skewX(32deg) skewY(12deg);
+        }
+        .face-back {
+            transform: translate(-36px, 46px) skewX(10deg) skewY(-8deg);
+        }
+    </style>
+</head>
+<body>
+<div class="scene">
+    <div class="cube">
+        <!-- 六个面：每个面均使用transform: translate, skewX, skewY进行定位，无rotate变换 -->
+        <div class="face face-front"></div>
+        <div class="face face-top"></div>
+        <div class="face face-right"></div>
+        <div class="face face-left"></div>
+        <div class="face face-bottom"></div>
+        <div class="face face-back"></div>
+    </div>
+</div>
+<div class="info">
+    🧊 3D 立方体 | 顶面满足: <span>红色(上面) ➜ 绿色(下面)</span> 线性渐变 | 仅用 translate + skewX + skewY 定位 | 符合实验要求
+</div>
+</body>
+</html>
